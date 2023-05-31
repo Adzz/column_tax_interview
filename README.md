@@ -37,6 +37,8 @@ The total time allotted is three hours.
 2. We will pre-process and create one large file of all of the email bodys.
 3. Search parses that file line by line and collects any line that contains
 
+The gotcha is that if we stream that large file line by line for example, we are going to struggle to match a string that starts on one line and finishes on the next line. We might be better to ingest the string byte by byte and compare them and buffer the search match
+
 ## Some initial thoughts
 
 - Seems reasonable to split up the searching so you can search _just_ the contacts and _just_ the calendar, or _just_ emails,
