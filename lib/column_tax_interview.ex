@@ -5,6 +5,6 @@ defmodule ColumnTaxInterview do
 
   @doc """
   """
-  def hello do
+  def search() do
   end
 end
