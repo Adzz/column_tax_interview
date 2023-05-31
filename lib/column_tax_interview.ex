@@ -9,12 +9,48 @@ defmodule ColumnTaxInterview do
   @doc """
   """
   def search_the_bodies(term) do
-    {:ok, file} = File.open(@email_body_db_path, [:append])
+    search_chars = String.codepoints(term)
+    {:ok, file} = File.open(@email_body_db_path, [])
 
-    IO.stream(file, 1)
-    |> Enum.each(fn char ->
-      char |> IO.inspect(limit: :infinity, label: "kkkk")
-    end)
+    {_, results, _} =
+      IO.stream(file, :line)
+      |> Enum.reduce({"", [], search_chars}, fn
+        # When we get here we need to flush the buffer essentially. We need to be like
+        # Did we find all of the search terms? If so add to matches, otherwise don't do that
+        "# :email_body_found_in: " <> file_path,
+        {current_email, email_matches, search_terms_remaining} ->
+          {file_path, email_matches, search_chars}
+
+        line, {current_email, email_matches, search_terms_remaining} ->
+          # The tricky part is that the search term might wrap onto the next line...
+          case search_line(line, search_terms_remaining, search_chars) do
+            # Here we found a match on the line.
+            [] ->
+              {current_email, [current_email | email_matches], search_chars}
+
+            terms_remaining_after_line_search ->
+              {current_email, email_matches, terms_remaining_after_line_search}
+          end
+      end)
+
+    File.close(file)
+    results
+  end
+
+  defp search_line(_, [], _), do: []
+
+  defp search_line(<<>>, search_terms_remaining, _) do
+    search_terms_remaining
+  end
+
+  defp search_line(<<char::binary-size(1), restline::binary>>, [first_term | rest], search_chars) do
+    if char == first_term do
+      search_line(restline, rest, search_chars)
+    else
+      # Asd soon as we don't match we want to reset to us the whole search term again.
+      # This doesn't do that if we get part way through it only undoes one.
+      search_line(restline, search_chars, search_chars)
+    end
   end
 
   def pre_process_email_bodies() do
@@ -48,7 +84,7 @@ defmodule ColumnTaxInterview do
           body ->
             # We could append metadata here to make it clear which email file this was.
             #
-            IO.write(destination, ["\nemail_body_found_in: #{root}" | body])
+            IO.write(destination, ["\nemail_body_found_in: #{root}\n" | body])
         end
     end
   end
