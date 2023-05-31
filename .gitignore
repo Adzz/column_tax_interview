@@ -24,3 +24,7 @@ column_tax_interview-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# These are huge so ignoring for Git.
+maildir/
+email_body_db.txt

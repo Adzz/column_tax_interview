@@ -3,6 +3,6 @@ defmodule ColumnTaxInterviewTest do
   doctest ColumnTaxInterview
 
   test "greets the world" do
-    assert ColumnTaxInterview.hello() == :world
+    assert ColumnTaxInterview.search("aaa", :email_body) == []
   end
 end
